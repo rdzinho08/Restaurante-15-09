@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Restaurante</title>
+    
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    
+    <header class="header">
+      
+        <div class="user-section">
+            <img id="logo" src="/anexos_prova/imagens_usuarios/chef3.jpg" alt="Foto de perfil">
+            <span class="username">Restaurant-Chef</span>
+            <button class="btn-primary" disabled>Ver Perfil</button>
+        </div>
+
+      
+        <div class="empresa-section">
+            <h1>Restaurante-Chef</h1>
+        </div>
+
+        
+        <div class="login-section">
+            <button id="btlogin" class="btn-primary" onclick="document.getElementById('authModal').showModal()">Login</button>
+        </div>
+    </header>
+
+    
+    <main class="principal">
+        
+        <div class="campo-busca">
+            <input type="text" placeholder="Digite o nome do chef... ex: @chef1">
+            <img src="/anexos_prova/icones/lupa.svg" alt="Lupa" class="icone-busca">
+        </div>
+
+        
+        <div class="mural-receitas">
+            <!-- Card 1 -->
+            <div class="card-receita">
+                <img src="/anexos_prova/receitas/receita1.jpg" alt="Receita 1" class="foto-receita">
+                <div class="card-info">
+                    <h3>Receita 1</h3>
+                    <div class="favoritos">
+                        <img src="anexos_prova/estrela.svg" alt="Estrela" class="icone-estrela">
+                        <span>0</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Card 2 -->
+            <div class="card-receita">
+                <img src="/anexos_prova/receitas/receita2.jpg" alt="Receita 2" class="foto-receita">
+                <div class="card-info">
+                    <h3>Receita 2</h3>
+                    <div class="favoritos">
+                        <img src="anexos_prova/estrela.svg" alt="Estrela" class="icone-estrela">
+                        <span>0</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Card 3 -->
+            <div class="card-receita">
+                <img src="/anexos_prova/receitas/receita3.jpg" alt="Receita 3" class="foto-receita">
+                <div class="card-info">
+                    <h3>Receita 3</h3>
+                    <div class="favoritos">
+                        <img src="anexos_prova/estrela.svg" alt="Estrela" class="icone-estrela">
+                        <span>0</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+   
+    <footer>
+        <p>Rodapé da aplicação</p>
+    </footer>
+
+    <dialog id="authModal">
+        <h2>Autenticação</h2>
+        <form method="dialog">
+            <input type="text" placeholder="Usuário"><br><br>
+            <input type="password" placeholder="Senha"><br><br>
+            <button type="submit" class="btn-primary">Entrar</button>
+            <button type="button" onclick="document.getElementById('authModal').close()">Fechar</button>
+        </form>
+    </dialog>
+
+</body>
+</html>
