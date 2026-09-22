@@ -1,165 +1,72 @@
+const API_URL = 'http://localhost:3000';
 
-const usuariosBD = [
-    { email: "comum@dominio.com", senha: "123", nome: "Usuário Comum", tipo: "comum", avatar: "/anexos_prova/imagens_usuarios/chef1.jpg" },
-    { email: "exemplo@dominio.com", senha: "123", nome: "Chef1", tipo: "chef", handle: "chef1", avatar: "/anexos_prova/imagens_usuarios/chef3.jpg" }
-];
+let receitasFavoritasIds = new Set();
+let todasReceitas = [];
 
-let receitasBD = [
-    { id: 1, titulo: "Receita 1", chef: "chef1", foto: "/anexos_prova/receitas/receita1.jpg", favoritos: 0, favoritadosPorMim: [] },
-    { id: 2, titulo: "Receita 2", chef: "chef1", foto: "/anexos_prova/receitas/receita2.jpg", favoritos: 0, favoritadosPorMim: [] },
-    { id: 3, titulo: "Receita 3", chef: "chef1", foto: "/anexos_prova/receitas/receita3.jpg", favoritos: 0, favoritadosPorMim: [] },
-    { id: 4, titulo: "Receita 4", chef: "chef2", foto: "/anexos_prova/receitas/receita4.jpg", favoritos: 0, favoritadosPorMim: [] },
-    { id: 5, titulo: "Receita 5", chef: "chef2", foto: "/anexos_prova/receitas/receita5.jpg", favoritos: 0, favoritadosPorMim: [] }
-];
+document.addEventListener('DOMContentLoaded', () => {
+    carregarReceitas();
 
-let usuarioLogado = null;
-
-document.addEventListener("DOMContentLoaded", () => {
-    renderizarMural(receitasBD);
+    const inputBusca = document.getElementById('input-busca');
+    if (inputBusca) {
+        inputBusca.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') buscarChef();
+        });
+    }
 });
 
+async function carregarReceitas() {
+    const msgErro = document.getElementById('erro-busca');
+    if (msgErro) msgErro.classList.add('hidden');
 
-function abrirModalLogin() {
-    limparErrosLogin();
-    document.getElementById('authModal').showModal();
-}
-
-function fecharModalLogin() {
-    document.getElementById('authModal').close();
-}
-
-function limparErrosLogin() {
-    document.getElementById('erro-email').classList.add('hidden');
-    document.getElementById('erro-senha').classList.add('hidden');
-    document.getElementById('erro-login-geral').classList.add('hidden');
-}
-
-
-function realizarLogin(event) {
-    event.preventDefault();
-    limparErrosLogin();
-
-    const email = document.getElementById('email').value.trim();
-    const senha = document.getElementById('senha').value.trim();
-    let valido = true;
-
-   
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!email || !emailRegex.test(email)) {
-        document.getElementById('erro-email').classList.remove('hidden');
-        valido = false;
+    try {
+        const response = await fetch(`${API_URL}/receitas`);
+        if (!response.ok) throw new Error('Erro na requisição');
+        todasReceitas = await response.json();
+    } catch (error) {
+        console.warn('Backend indisponível. Carregando dados locais...');
+        todasReceitas = [
+            { id_receita: 1, titulo_receita: "Receita 1", url_imagem: "/anexos_prova/receitas/receita1.jpg", favoritos: 0 },
+            { id_receita: 2, titulo_receita: "Receita 2", url_imagem: "/anexos_prova/receitas/receita2.jpg", favoritos: 0 },
+            { id_receita: 3, titulo_receita: "Receita 3", url_imagem: "/anexos_prova/receitas/receita3.jpg", favoritos: 0 },
+            { id_receita: 4, titulo_receita: "Receita 4", url_imagem: "/anexos_prova/receitas/receita4.jpg", favoritos: 0 },
+            { id_receita: 5, titulo_receita: "Receita 5", url_imagem: "/anexos_prova/receitas/receita5.jpg", favoritos: 0 },
+            { id_receita: 6, titulo_receita: "Receita 6", url_imagem: "/anexos_prova/receitas/receita6.jpg", favoritos: 0 },
+            { id_receita: 7, titulo_receita: "Receita 7", url_imagem: "/anexos_prova/receitas/receita7.jpg", favoritos: 0 },
+            { id_receita: 8, titulo_receita: "Receita 8", url_imagem: "/anexos_prova/receitas/receita8.jpg", favoritos: 0 },
+            { id_receita: 9, titulo_receita: "Receita 9", url_imagem: "/anexos_prova/receitas/receita9.jpg", favoritos: 0 }
+        ];
     }
 
-  
-    if (!senha) {
-        document.getElementById('erro-senha').classList.remove('hidden');
-        valido = false;
-    }
-
-    if (!valido) return;
-
-   
-    const user = usuariosBD.find(u => u.email === email && u.senha === senha);
-
-    if (user) {
-        usuarioLogado = user;
-        atualizarInterfaceUsuarioLogado();
-        fecharModalLogin();
-    } else {
-        document.getElementById('erro-login-geral').classList.remove('hidden');
-    }
-}
-
-function atualizarInterfaceUsuarioLogado() {
-    document.getElementById('user-name').innerText = usuarioLogado.nome;
-    document.getElementById('user-avatar').src = usuarioLogado.avatar;
-
-    
-    const btnPerfil = document.getElementById('btn-perfil');
-    if (usuarioLogado.tipo === "chef") {
-        btnPerfil.removeAttribute('disabled');
-    } else {
-        btnPerfil.setAttribute('disabled', 'true');
-    }
-
-    document.getElementById('btlogin').classList.add('hidden');
-    document.getElementById('btlogout').classList.remove('hidden');
+    exibirReceitas(todasReceitas);
+    atualizarContadoresPerfil();
 }
 
 
-function fazerLogout() {
-    usuarioLogado = null;
-    window.location.reload();
-}
+function exibirReceitas(receitas) {
+    const mural = document.getElementById('mural-receitas');
+    if (!mural) return;
 
+    mural.innerHTML = '';
 
-function abrirMenuLateral() {
-    if (!usuarioLogado || usuarioLogado.tipo !== "chef") return;
-
-    const receitasDoChef = receitasBD.filter(r => r.chef === usuarioLogado.handle);
-    const totalFavs = receitasDoChef.reduce((acc, r) => acc + r.favoritos, 0);
-
-    document.getElementById('total-favoritos').innerText = totalFavs;
-    document.getElementById('total-receitas').innerText = receitasDoChef.length;
-
-    document.getElementById('sidebar').classList.add('open');
-    document.getElementById('overlay-sidebar').classList.add('active');
-}
-
-function fecharMenuLateral() {
-    document.getElementById('sidebar').classList.remove('open');
-    document.getElementById('overlay-sidebar').classList.remove('active');
-}
-
-function carregarSuasReceitas() {
-    fecharMenuLateral();
-    const minhasReceitas = receitasBD.filter(r => r.chef === usuarioLogado.handle);
-    renderizarMural(minhasReceitas);
-}
-
-
-function buscarChef() {
-    const termo = document.getElementById('input-busca').value.trim().toLowerCase();
-    const erroElemento = document.getElementById('erro-busca');
-
-    if (!termo) {
-        renderizarMural(receitasBD);
-        erroElemento.classList.add('hidden');
+    if (!receitas || receitas.length === 0) {
+        mural.innerHTML = '<p style="grid-column: 1/-1; text-align: center;">Nenhuma receita encontrada.</p>';
         return;
     }
 
-    const receitasEncontradas = receitasBD.filter(r => r.chef.toLowerCase() === termo);
-
-    if (receitasEncontradas.length === 0) {
-        erroElemento.classList.remove('hidden');
-    } else {
-        erroElemento.classList.add('hidden');
-        renderizarMural(receitasEncontradas);
-    }
-}
-
-
-function renderizarMural(listaReceitas) {
-    const mural = document.getElementById('mural-receitas');
-    mural.innerHTML = "";
-
-    listaReceitas.forEach(receita => {
-        const jaFavoritou = usuarioLogado && receita.favoritadosPorMim.includes(usuarioLogado.email);
-        
-        // Favoritada: #F6A823 (Laranja) | Não favoritada: #1B3C29 (Verde)
-        const corEstrela = jaFavoritou ? "#F6A823" : "#1B3C29";
-
+    receitas.forEach(receita => {
+        const isFavorita = receitasFavoritasIds.has(receita.id_receita);
         const card = document.createElement('div');
         card.className = 'card-receita';
+
+        const imgUrl = receita.url_imagem ? receita.url_imagem : '/anexos_prova/receitas/receita1.jpg';
+
         card.innerHTML = `
-            <img src="${receita.foto}" alt="${receita.titulo}" class="foto-receita">
+            <img src="${imgUrl}" alt="${receita.titulo_receita}" class="foto-receita" onerror="this.src='https://via.placeholder.com/300x200?text=Receita'">
             <div class="card-info">
-                <h3>${receita.titulo}</h3>
-                <div class="favoritos" onclick="alternarFavorito(${receita.id})">
-                    <svg class="icone-estrela" viewBox="0 0 24 24" fill="${corEstrela}">
-                        <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/>
-                    </svg>
-                    <span style="color: ${corEstrela}">${receita.favoritos}</span>
+                <h3 class="titulo-receita">${receita.titulo_receita}</h3>
+                <div class="favoritos ${isFavorita ? 'favoritado' : ''}" onclick="favoritarReceita(${receita.id_receita})">
+                    <span class="estrela-btn">&#9733;</span>
+                    <span id="fav-count-${receita.id_receita}">${receita.favoritos || 0}</span>
                 </div>
             </div>
         `;
@@ -167,22 +74,74 @@ function renderizarMural(listaReceitas) {
     });
 }
 
-function alternarFavorito(receitaId) {
-    if (!usuarioLogado) {
-        abrirModalLogin();
+
+async function favoritarReceita(id) {
+    const receita = todasReceitas.find(r => r.id_receita === id);
+    if (!receita) return;
+
+    if (receitasFavoritasIds.has(id)) {
+        receitasFavoritasIds.delete(id);
+        receita.favoritos = Math.max(0, (receita.favoritos || 0) - 1);
+    } else {
+        receitasFavoritasIds.add(id);
+        receita.favoritos = (receita.favoritos || 0) + 1;
+    }
+
+    exibirReceitas(todasReceitas);
+    atualizarContadoresPerfil();
+}
+
+
+function atualizarContadoresPerfil() {
+    const elTotalFavoritos = document.getElementById('total-favoritos');
+    const elTotalReceitas = document.getElementById('total-receitas');
+
+    if (elTotalFavoritos) elTotalFavoritos.textContent = receitasFavoritasIds.size;
+    if (elTotalReceitas) elTotalReceitas.textContent = todasReceitas.length;
+}
+
+
+function carregarSuasReceitas() {
+    const receitasFavoritas = todasReceitas.filter(r => receitasFavoritasIds.has(r.id_receita));
+    exibirReceitas(receitasFavoritas);
+    fecharMenuLateral();
+}
+
+
+function abrirMenuLateral() {
+    atualizarContadoresPerfil();
+    document.getElementById('sidebar')?.classList.add('open');
+    document.getElementById('overlay-sidebar')?.classList.add('active');
+}
+
+function fecharMenuLateral() {
+    document.getElementById('sidebar')?.classList.remove('open');
+    document.getElementById('overlay-sidebar')?.classList.remove('active');
+}
+
+n
+function abrirModalLogin() { document.getElementById('authModal')?.showModal(); }
+function fecharModalLogin() { document.getElementById('authModal')?.close(); }
+
+
+async function buscarChef() {
+    const input = document.getElementById('input-busca').value.trim();
+    const msgErro = document.getElementById('erro-busca');
+
+    if (!input) {
+        carregarReceitas();
         return;
     }
 
-    const receita = receitasBD.find(r => r.id === receitaId);
-    const indexFav = receita.favoritadosPorMim.indexOf(usuarioLogado.email);
+    try {
+        const response = await fetch(`${API_URL}/receitas/chef/${encodeURIComponent(input)}`);
+        if (!response.ok) throw new Error();
 
-    if (indexFav === -1) {
-        receita.favoritadosPorMim.push(usuarioLogado.email);
-        receita.favoritos += 1;
-    } else {
-        receita.favoritadosPorMim.splice(indexFav, 1);
-        receita.favoritos -= 1;
+        if (msgErro) msgErro.classList.add('hidden');
+        const receitas = await response.json();
+        exibirReceitas(receitas);
+    } catch (error) {
+        if (msgErro) msgErro.classList.remove('hidden');
+        document.getElementById('mural-receitas').innerHTML = '';
     }
-
-    buscarChef();
 }
